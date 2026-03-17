@@ -69,7 +69,7 @@ async function startBot(){
     if (!sock.authState.creds.registered && !jaGerouCodigo) {
       jaGerouCodigo = true
 
-      const numero = "55SEUNUMEROAQUI" // COLOCA SEU NÚMERO
+      const numero = "559180305171" // COLOCA SEU NÚMERO
 
       try {
         const code = await sock.requestPairingCode(numero)
