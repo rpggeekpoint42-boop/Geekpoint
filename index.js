@@ -1,7 +1,4 @@
-import makeWASocket, {
-  useMultiFileAuthState,
-  fetchLatestBaileysVersion
-} from "@whiskeysockets/baileys"
+import makeWASocket, { useMultiFileAuthState, fetchLatestBaileysVersion } from "@whiskeysockets/baileys"
 import pino from "pino"
 import fs from "fs"
 
@@ -21,7 +18,12 @@ function saveNickData(data){
   fs.writeFileSync(nickDataFile, JSON.stringify(data,null,2))
 }
 
+/* ===================== */
+/* VERIFICA ADM */
+/* ===================== */
+
 async function checkAdmins(sock, chatId, senderJid){
+
   if(!chatId.endsWith("@g.us")){
     return { botAdmin:false, userAdmin:false }
   }
@@ -54,17 +56,27 @@ async function startBot(){
 
   sock.ev.on("creds.update", saveCreds)
 
+  // 🔑 CONTROLE PRA NÃO GERAR CÓDIGO VÁRIAS VEZES
+  let jaGerouCodigo = false
+
   sock.ev.on("connection.update", async ({connection,lastDisconnect})=>{
 
     if(connection === "connecting"){
       console.log("🌐 Conectando ao WhatsApp...")
     }
 
-    // 👇 PAREAMENTO CORRETO
-    if(!sock.authState.creds.registered){
-      const numero = "559180305171" // EX: 5521999998888
-      const code = await sock.requestPairingCode(numero)
-      console.log("🔑 Código de pareamento:", code)
+    // 🔑 PAREAMENTO (ESSA É A PARTE QUE FALTAVA)
+    if (!sock.authState.creds.registered && !jaGerouCodigo) {
+      jaGerouCodigo = true
+
+      const numero = "55SEUNUMEROAQUI" // COLOCA SEU NÚMERO
+
+      try {
+        const code = await sock.requestPairingCode(numero)
+        console.log("🔑 Código de pareamento:", code)
+      } catch (err) {
+        console.log("❌ Erro ao gerar código:", err)
+      }
     }
 
     if(connection === "open"){
@@ -95,9 +107,9 @@ async function startBot(){
 
     const nickData = loadNickData()
 
-// =====================
-// PING
-// =====================
+/* ===================== */
+/* PING */
+/* ===================== */
 
 if(text.startsWith(`${prefix}ping`)){
 
@@ -119,9 +131,9 @@ if(text.startsWith(`${prefix}ping`)){
   return
 }
 
-// =====================
-// STATUS
-// =====================
+/* ===================== */
+/* STATUS */
+/* ===================== */
 
 if(text.startsWith(`${prefix}status`)){
 
@@ -153,9 +165,9 @@ await sock.sendMessage(chatId,{text:resposta})
 return
 }
 
-// =====================
-// ID DO GRUPO
-// =====================
+/* ===================== */
+/* ID DO GRUPO */
+/* ===================== */
 
 if(text.startsWith(`${prefix}idgp`)){
 
@@ -171,9 +183,9 @@ await sock.sendMessage(chatId,{text:`📌 ID do Grupo:\n${chatId}`})
 return
 }
 
-// =====================
-// RENAME
-// =====================
+/* ===================== */
+/* RENOMEAR */
+/* ===================== */
 
 if(text.startsWith(`${prefix}rename`)){
 
@@ -214,9 +226,9 @@ await sock.sendMessage(chatId,{text:`✅ Nick atualizado para: ${newNick}`})
 return
 }
 
-// =====================
-// HISTORICO
-// =====================
+/* ===================== */
+/* HISTORICO */
+/* ===================== */
 
 if(text.startsWith(`${prefix}historico`)){
 
@@ -255,9 +267,9 @@ await sock.sendMessage(chatId,{text:msgText})
 return
 }
 
-// =====================
-// QUEST RPG
-// =====================
+/* ===================== */
+/* QUEST RPG */
+/* ===================== */
 
 if(text === `${prefix}Quest`){
 
