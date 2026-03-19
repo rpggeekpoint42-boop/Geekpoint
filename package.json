@@ -1,24 +1,13 @@
 {
-  "name": "geekpoint-bot",
+  "name": "Geekpoint",
   "version": "1.0.0",
-  "description": "Geek'Point WhatsApp Bot",
-  "main": "index.js",
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": [
-    "whatsapp",
-    "bot",
-    "baileys",
-    "geekpoint"
-  ],
-  "author": "Loki",
-  "license": "MIT",
   "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc.9",
-    "pino": "^10.3.1",
-    "qrcode-terminal": "^0.12.0",
-    "ws": "^8.19.0"
+    "@whiskeysockets/baileys": "^6.7.0",
+    "pino": "^8.0.0"
   }
 }
