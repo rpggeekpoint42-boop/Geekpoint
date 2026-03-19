@@ -27,7 +27,7 @@ async function startBot() {
     auth: state,
     printQRInTerminal: false,
     logger: pino({ level: "silent" }),
-    browser: ["Ubuntu", "Chrome", "20.0.04"]
+    browser: ["Windows", "Chrome", "120.0.0"]
   })
 
   // 💾 salvar sessão
