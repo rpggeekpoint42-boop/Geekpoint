@@ -19,7 +19,7 @@ async function startBot() {
   })
 
   if (!sock.authState.creds.registered) {
-    const numero = "SEU_NUMERO_AQUI"
+    const numero = "559180305171"
     const code = await sock.requestPairingCode(numero)
     console.log("📲 Código:", code)
   }
