@@ -60,7 +60,7 @@ async function startBot() {
     if (!sock.authState.creds.registered && !codigoGerado) {
       codigoGerado = true
       try {
-        const numero = "559XXXXXXXXX" // ⚠️ COLOCA SEU NÚMERO
+        const numero = "559180305171" // ⚠️ COLOCA SEU NÚMERO
         const code = await sock.requestPairingCode(numero)
         console.log("📲 Código de pareamento:", code)
       } catch (err) {
