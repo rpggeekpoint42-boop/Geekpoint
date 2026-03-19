@@ -4,10 +4,18 @@ import makeWASocket, {
   DisconnectReason
 } from "@whiskeysockets/baileys"
 import pino from "pino"
+import fs from "fs"
 
 console.log("🚀 Iniciando bot...")
 
+// 🧹 LIMPAR SESSÃO BUGADA (RODA SÓ 1 VEZ)
+if (fs.existsSync("./auth")) {
+  fs.rmSync("./auth", { recursive: true, force: true })
+  console.log("🧹 Sessão antiga apagada!")
+}
+
 let sock
+let codigoGerado = false
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth")
@@ -19,7 +27,7 @@ async function startBot() {
     auth: state,
     printQRInTerminal: false,
     logger: pino({ level: "silent" }),
-    browser: ["Ubuntu", "Chrome", "20.0.04"] // evita alguns bloqueios
+    browser: ["Ubuntu", "Chrome", "20.0.04"]
   })
 
   // 💾 salvar sessão
@@ -34,28 +42,29 @@ async function startBot() {
     }
 
     if (connection === "open") {
-      console.log("✅ Bot conectado!")
+      console.log("✅ Conectado com sucesso!")
     }
 
     if (connection === "close") {
       const reason = lastDisconnect?.error?.output?.statusCode
 
       if (reason === DisconnectReason.loggedOut) {
-        console.log("❌ Sessão expirada, apague a pasta auth.")
+        console.log("❌ Sessão inválida, limpe auth e reconecte.")
       } else {
-        console.log("♻️ Reconectando...")
-        setTimeout(() => startBot(), 3000) // evita loop rápido
+        console.log("♻️ Reconectando em 5s...")
+        setTimeout(() => startBot(), 5000)
       }
     }
 
-    // 📲 pairing code (corrigido pra não spammar)
-    if (!sock.authState.creds.registered) {
+    // 📲 GERAR CÓDIGO (SEM BUG)
+    if (!sock.authState.creds.registered && !codigoGerado) {
+      codigoGerado = true
       try {
-        const numero = "559180305171" // ⚠️ seu número
+        const numero = "559XXXXXXXXX" // ⚠️ COLOCA SEU NÚMERO
         const code = await sock.requestPairingCode(numero)
-        console.log("📲 Código:", code)
+        console.log("📲 Código de pareamento:", code)
       } catch (err) {
-        console.log("❌ Erro no pairing:", err?.message)
+        console.log("❌ Erro ao gerar código:", err.message)
       }
     }
   })
@@ -76,14 +85,12 @@ async function startBot() {
 
       console.log("📩", texto)
 
-      // menu
       if (texto === "$menu") {
         await sock.sendMessage(from, {
           text: "📜 MENU\n\n$menu\n$ping"
         })
       }
 
-      // ping
       if (texto === "$ping") {
         await sock.sendMessage(from, {
           text: "🏓 Pong!"
