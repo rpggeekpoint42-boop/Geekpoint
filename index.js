@@ -1,13 +1,5 @@
 import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys'
 import pino from 'pino'
-import readline from 'readline'
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-})
-
-const pergunta = (texto) => new Promise(resolve => rl.question(texto, resolve))
 
 async function iniciarBot() {
     const { state, saveCreds } = await useMultiFileAuthState('auth')
@@ -15,17 +7,17 @@ async function iniciarBot() {
     const sock = makeWASocket({
         logger: pino({ level: 'silent' }),
         auth: state,
-        printQRInTerminal: false,
-        browser: ['GeekPoint Bot', 'Chrome', '1.0'] // 👈 NOME AQUI
+        browser: ['GeekPoint Bot', 'Chrome', '1.0']
     })
 
-    if (!sock.authState.creds.registered) {
-        const numero = await pergunta('Digite seu número (ex: 559999999999): ')
-        const code = await sock.requestPairingCode(numero)
-        console.log(`🔗 Código: ${code}`)
-    }
-
     sock.ev.on('creds.update', saveCreds)
+
+    // 🔗 GERAR CÓDIGO AUTOMÁTICO
+    if (!sock.authState.creds.registered) {
+        const numero = "+559180305171" // ex: 559999999999
+        const code = await sock.requestPairingCode(numero)
+        console.log("🔗 Código de pareamento:", code)
+    }
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0]
@@ -51,7 +43,7 @@ async function iniciarBot() {
 
             if (shouldReconnect) iniciarBot()
         } else if (connection === 'open') {
-            console.log('✅ GeekPoint Bot conectado!')
+            console.log('✅ Bot conectado!')
         }
     })
 }
