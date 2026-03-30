@@ -20,7 +20,7 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds)
 
-    // 📩 comando ping
+    // comando ping
     sock.ev.on('messages.upsert', async ({ messages }) => {
         try {
             const msg = messages[0]
@@ -38,15 +38,15 @@ async function startBot() {
         } catch {}
     })
 
-    // 🔗 conexão + pareamento + reconexão CORRIGIDOS
+    // conexão + pareamento + reconexão
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update
 
         if (connection === 'open') {
             console.log("✅ GeekPoint Bot conectado!")
 
-            // gera código só 1 vez
-            if (!sock.authState.creds.registered && !jaGerouCodigo) {
+            // gera código 1 vez só
+            if (!jaGerouCodigo) {
                 try {
                     jaGerouCodigo = true
                     const numero = "559180305171"
