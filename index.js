@@ -1,10 +1,16 @@
-import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys'
+import makeWASocket, {
+    useMultiFileAuthState,
+    DisconnectReason,
+    fetchLatestBaileysVersion
+} from '@whiskeysockets/baileys'
 import pino from 'pino'
 
-async function iniciarBot() {
+async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('auth')
+    const { version } = await fetchLatestBaileysVersion()
 
     const sock = makeWASocket({
+        version,
         logger: pino({ level: 'silent' }),
         auth: state,
         browser: ['GeekPoint Bot', 'Chrome', '1.0']
@@ -12,28 +18,34 @@ async function iniciarBot() {
 
     sock.ev.on('creds.update', saveCreds)
 
-    // 🔗 GERAR CÓDIGO AUTOMÁTICO
+    // 🔗 Código de pareamento automático
     if (!sock.authState.creds.registered) {
-        const numero = "+559180305171" // ex: 559999999999
-        const code = await sock.requestPairingCode(numero)
-        console.log("🔗 Código de pareamento:", code)
+        try {
+            const numero = "559180305171" // 👈 SEU NÚMERO CORRIGIDO
+            const code = await sock.requestPairingCode(numero)
+            console.log("🔗 Código de pareamento:", code)
+        } catch (err) {
+            console.log("Erro ao gerar código:", err)
+        }
     }
 
+    // 📩 Comando ping
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0]
         if (!msg.message) return
 
-        const texto =
+        const text =
             msg.message.conversation ||
             msg.message.extendedTextMessage?.text
 
-        if (texto === 'ping') {
+        if (text === 'ping') {
             await sock.sendMessage(msg.key.remoteJid, {
                 text: '🏓 Pong!\n🤖 GeekPoint Bot online!'
             })
         }
     })
 
+    // 🔄 Reconexão automática
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update
 
@@ -41,11 +53,12 @@ async function iniciarBot() {
             const shouldReconnect =
                 lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
 
-            if (shouldReconnect) iniciarBot()
+            console.log('🔄 Reconectando...')
+            if (shouldReconnect) startBot()
         } else if (connection === 'open') {
-            console.log('✅ Bot conectado!')
+            console.log('✅ GeekPoint Bot conectado!')
         }
     })
 }
 
-iniciarBot()
+startBot()
