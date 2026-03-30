@@ -38,13 +38,14 @@ async function startBot() {
         } catch {}
     })
 
-    // 🔗 conexão + pareamento SEM LOOP
+    // 🔗 conexão + pareamento + reconexão CORRIGIDOS
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update
 
         if (connection === 'open') {
             console.log("✅ GeekPoint Bot conectado!")
 
+            // gera código só 1 vez
             if (!sock.authState.creds.registered && !jaGerouCodigo) {
                 try {
                     jaGerouCodigo = true
@@ -58,12 +59,17 @@ async function startBot() {
         }
 
         if (connection === 'close') {
-            const shouldReconnect =
-                lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
+            const statusCode = lastDisconnect?.error?.output?.statusCode
 
-            console.log("🔄 Reconectando...")
+            console.log("❌ Conexão fechada:", statusCode)
 
-            if (shouldReconnect) startBot()
+            if (statusCode !== DisconnectReason.loggedOut) {
+                setTimeout(() => {
+                    startBot()
+                }, 5000)
+            } else {
+                console.log("🚫 Deslogado, precisa parear de novo")
+            }
         }
     })
 }
