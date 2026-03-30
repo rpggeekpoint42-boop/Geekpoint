@@ -18,36 +18,44 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds)
 
-    // 🔗 Código de pareamento automático
-    if (!sock.authState.creds.registered) {
-        try {
-            const numero = "559180305171" // 👈 SEU NÚMERO CORRIGIDO
-            const code = await sock.requestPairingCode(numero)
-            console.log("🔗 Código de pareamento:", code)
-        } catch (err) {
-            console.log("Erro ao gerar código:", err)
-        }
-    }
-
     // 📩 Comando ping
     sock.ev.on('messages.upsert', async ({ messages }) => {
-        const msg = messages[0]
-        if (!msg.message) return
+        try {
+            const msg = messages[0]
+            if (!msg.message) return
 
-        const text =
-            msg.message.conversation ||
-            msg.message.extendedTextMessage?.text
+            const text =
+                msg.message.conversation ||
+                msg.message.extendedTextMessage?.text
 
-        if (text === 'ping') {
-            await sock.sendMessage(msg.key.remoteJid, {
-                text: '🏓 Pong!\n🤖 GeekPoint Bot online!'
-            })
+            if (text === 'ping') {
+                await sock.sendMessage(msg.key.remoteJid, {
+                    text: '🏓 Pong!\n🤖 GeekPoint Bot online!'
+                })
+            }
+        } catch (err) {
+            console.log('Erro ao responder mensagem:', err)
         }
     })
 
-    // 🔄 Reconexão automática
-    sock.ev.on('connection.update', (update) => {
+    // 🔗 Conexão + Pareamento seguro
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update
+
+        if (connection === 'open') {
+            console.log('✅ GeekPoint Bot conectado!')
+
+            // gerar código só quando conectar
+            if (!sock.authState.creds.registered) {
+                try {
+                    const numero = "559180305171"
+                    const code = await sock.requestPairingCode(numero)
+                    console.log("🔗 Código de pareamento:", code)
+                } catch (err) {
+                    console.log("Erro ao gerar código:", err)
+                }
+            }
+        }
 
         if (connection === 'close') {
             const shouldReconnect =
@@ -55,8 +63,6 @@ async function startBot() {
 
             console.log('🔄 Reconectando...')
             if (shouldReconnect) startBot()
-        } else if (connection === 'open') {
-            console.log('✅ GeekPoint Bot conectado!')
         }
     })
 }
