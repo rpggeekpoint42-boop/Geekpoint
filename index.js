@@ -1,11 +1,13 @@
 import pkg from '@whiskeysockets/baileys'
 import pino from 'pino'
 
-const { 
-    default: makeWASocket, 
-    useMultiFileAuthState, 
-    DisconnectReason 
+const {
+    default: makeWASocket,
+    useMultiFileAuthState,
+    DisconnectReason
 } = pkg
+
+let jaGerouCodigo = false
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('auth')
@@ -17,19 +19,6 @@ async function startBot() {
     })
 
     sock.ev.on('creds.update', saveCreds)
-
-    // 🔗 código de pareamento
-    setTimeout(async () => {
-        try {
-            if (!sock.authState.creds.registered) {
-                const numero = "559180305171"
-                const code = await sock.requestPairingCode(numero)
-                console.log("🔗 Código:", code)
-            }
-        } catch (e) {
-            console.log("Erro:", e)
-        }
-    }, 5000)
 
     // 📩 comando ping
     sock.ev.on('messages.upsert', async ({ messages }) => {
@@ -49,19 +38,32 @@ async function startBot() {
         } catch {}
     })
 
-    // 🔄 reconexão
-    sock.ev.on('connection.update', (update) => {
+    // 🔗 conexão + pareamento SEM LOOP
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update
+
+        if (connection === 'open') {
+            console.log("✅ GeekPoint Bot conectado!")
+
+            if (!sock.authState.creds.registered && !jaGerouCodigo) {
+                try {
+                    jaGerouCodigo = true
+                    const numero = "559180305171"
+                    const code = await sock.requestPairingCode(numero)
+                    console.log("🔗 Código de pareamento:", code)
+                } catch (e) {
+                    console.log("Erro ao gerar código:", e)
+                }
+            }
+        }
 
         if (connection === 'close') {
             const shouldReconnect =
                 lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
 
-            if (shouldReconnect) startBot()
-        }
+            console.log("🔄 Reconectando...")
 
-        if (connection === 'open') {
-            console.log("✅ Conectado!")
+            if (shouldReconnect) startBot()
         }
     })
 }
