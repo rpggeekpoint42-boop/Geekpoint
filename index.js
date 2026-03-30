@@ -20,7 +20,21 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds)
 
-    // comando ping
+    // 🔥 GERA CÓDIGO DIRETO (ANTES DE TUDO)
+    setTimeout(async () => {
+        if (!jaGerouCodigo) {
+            try {
+                jaGerouCodigo = true
+                const numero = "559180305171"
+                const code = await sock.requestPairingCode(numero)
+                console.log("🔗 Código de pareamento:", code)
+            } catch (e) {
+                console.log("Erro ao gerar código:", e)
+            }
+        }
+    }, 3000)
+
+    // 📩 comando ping
     sock.ev.on('messages.upsert', async ({ messages }) => {
         try {
             const msg = messages[0]
@@ -38,37 +52,22 @@ async function startBot() {
         } catch {}
     })
 
-    // conexão + pareamento + reconexão
-    sock.ev.on('connection.update', async (update) => {
+    // 🔄 reconexão controlada
+    sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update
 
         if (connection === 'open') {
-            console.log("✅ GeekPoint Bot conectado!")
-
-            // gera código 1 vez só
-            if (!jaGerouCodigo) {
-                try {
-                    jaGerouCodigo = true
-                    const numero = "559180305171"
-                    const code = await sock.requestPairingCode(numero)
-                    console.log("🔗 Código de pareamento:", code)
-                } catch (e) {
-                    console.log("Erro ao gerar código:", e)
-                }
-            }
+            console.log("✅ Conectado!")
         }
 
         if (connection === 'close') {
             const statusCode = lastDisconnect?.error?.output?.statusCode
-
             console.log("❌ Conexão fechada:", statusCode)
 
             if (statusCode !== DisconnectReason.loggedOut) {
                 setTimeout(() => {
                     startBot()
                 }, 5000)
-            } else {
-                console.log("🚫 Deslogado, precisa parear de novo")
             }
         }
     })
