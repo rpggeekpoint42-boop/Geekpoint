@@ -1,10 +1,11 @@
-"@whiskeysockets/baileys": "latest"
+import pkg from '@whiskeysockets/baileys'
 import pino from 'pino'
 
 const {
     default: makeWASocket,
     useMultiFileAuthState,
-    DisconnectReason
+    DisconnectReason,
+    fetchLatestBaileysVersion
 } = pkg
 
 let jaGerouCodigo = false
@@ -12,7 +13,11 @@ let jaGerouCodigo = false
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('auth')
 
+    // 🔥 pega versão atual do WhatsApp (ESSENCIAL)
+    const { version } = await fetchLatestBaileysVersion()
+
     const sock = makeWASocket({
+        version,
         logger: pino({ level: 'silent' }),
         auth: state,
         browser: ['GeekPoint Bot', 'Chrome', '1.0']
@@ -20,7 +25,7 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds)
 
-    // 🔥 GERA CÓDIGO NO MOMENTO CERTO (CORRIGE 405/428)
+    // 🔥 GERA CÓDIGO CERTO
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update
 
@@ -46,11 +51,7 @@ async function startBot() {
             console.log("❌ Conexão fechada:", statusCode)
 
             if (statusCode !== DisconnectReason.loggedOut) {
-                setTimeout(() => {
-                    startBot()
-                }, 5000)
-            } else {
-                console.log("🚫 Deslogado, precisa parear de novo")
+                setTimeout(() => startBot(), 5000)
             }
         }
     })
