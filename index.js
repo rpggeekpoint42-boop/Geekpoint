@@ -20,19 +20,40 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds)
 
-    // 🔥 GERA CÓDIGO DIRETO (ANTES DE TUDO)
-    setTimeout(async () => {
-        if (!jaGerouCodigo) {
-            try {
-                jaGerouCodigo = true
-                const numero = "559180305171"
-                const code = await sock.requestPairingCode(numero)
-                console.log("🔗 Código de pareamento:", code)
-            } catch (e) {
-                console.log("Erro ao gerar código:", e)
+    // 🔥 GERA CÓDIGO NO MOMENTO CERTO (CORRIGE 405/428)
+    sock.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect } = update
+
+        if (connection === 'connecting') {
+            if (!jaGerouCodigo) {
+                try {
+                    jaGerouCodigo = true
+                    const numero = "559180305171"
+                    const code = await sock.requestPairingCode(numero)
+                    console.log("🔗 Código de pareamento:", code)
+                } catch (e) {
+                    console.log("Erro ao gerar código:", e)
+                }
             }
         }
-    }, 3000)
+
+        if (connection === 'open') {
+            console.log("✅ GeekPoint Bot conectado!")
+        }
+
+        if (connection === 'close') {
+            const statusCode = lastDisconnect?.error?.output?.statusCode
+            console.log("❌ Conexão fechada:", statusCode)
+
+            if (statusCode !== DisconnectReason.loggedOut) {
+                setTimeout(() => {
+                    startBot()
+                }, 5000)
+            } else {
+                console.log("🚫 Deslogado, precisa parear de novo")
+            }
+        }
+    })
 
     // 📩 comando ping
     sock.ev.on('messages.upsert', async ({ messages }) => {
@@ -50,26 +71,6 @@ async function startBot() {
                 })
             }
         } catch {}
-    })
-
-    // 🔄 reconexão controlada
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update
-
-        if (connection === 'open') {
-            console.log("✅ Conectado!")
-        }
-
-        if (connection === 'close') {
-            const statusCode = lastDisconnect?.error?.output?.statusCode
-            console.log("❌ Conexão fechada:", statusCode)
-
-            if (statusCode !== DisconnectReason.loggedOut) {
-                setTimeout(() => {
-                    startBot()
-                }, 5000)
-            }
-        }
     })
 }
 
