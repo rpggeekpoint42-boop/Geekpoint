@@ -1,4 +1,4 @@
-import pkg from '@whiskeysockets/baileys'
+"@whiskeysockets/baileys": "latest"
 import pino from 'pino'
 
 const {
